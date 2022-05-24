@@ -9,20 +9,74 @@ app.use(cors());
 
 const users = [];
 
+function getUser(request) {
+  const { username } = request.headers;
+
+  return users.find( userData => userData.username === username );
+}
+
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const user = getUser(request);
+
+  if(!user){
+    return response.status(404).json({error: 'Mensagem de erro'})
+  }
+
+  request.user = user;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  const canCreateTodos = user.pro || user.todos.length < 10;
+
+  if(!canCreateTodos){
+    return response.status(403).json({error: "Mensagem de erro"});
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const  user = getUser(request);
+
+  if(!user){
+    return response.status(404).json({error: "Mensagem de erro"});
+  }
+
+  const { id } = request.params;
+
+  if(!validate(id)){
+    return response.status(400).json({error: "Mensagem de erro"});
+  }
+
+  const todo = user.todos.find( task => task.id === id );
+
+  if(!todo){
+    return response.status(404).json({error: "Mensagem de erro"});
+  }
+
+  request.user = user;
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find( userData => userData.id === id );
+
+  if(!user){
+    return response.status(404).json({error: "Mensagem de erro"});
+  }
+
+  request.user = user;
+
+  return next();
+  
 }
 
 app.post('/users', (request, response) => {
